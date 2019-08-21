@@ -1,0 +1,74 @@
+library ieee ;
+use ieee . std_logic_1164 .all;
+entity RegFile is
+port (clk,c,wr: in std_logic ;
+		wrA, rd0, rd1 : in std_logic_vector(5 downto 0);
+		d : in std_logic_vector(31 downto 0);
+		q0, q1 : out std_logic_vector(31 downto 0));
+end RegFile;
+
+architecture Banco of RegFile is
+
+signal Aq, Bq, Cq, Dq: std_logic_vector(7 downto 0);
+signal Ald, Bld, Cld, Dld: std_logic;
+
+component Reg32 is
+port (clk,c,ld: in std_logic ;
+		d: in std_logic_vector(31 downto 0);
+		q : out std_logic_vector(31 downto 0));
+end component;
+
+begin
+
+RA : Reg
+	port map(
+	clk => clk,
+	c => c,
+	ld => Ald,
+	d => d,
+	q => Aq
+	);
+	
+RB : Reg
+	port map(
+	clk => clk,
+	c => c,
+	ld => Bld,
+	d => d,
+	q => Bq
+	);
+	
+RC : Reg
+	port map(
+	clk => clk,
+	c => c,
+	ld => Cld,
+	d => d,
+	q => Cq
+	);
+	
+RD : Reg
+	port map(
+	clk => clk,
+	c => c,
+	ld => Dld,
+	d => d,
+	q => Dq
+	);
+
+q0 <= Aq when rd0 = "00000000" else
+		Bq when rd0 = "00000001" else
+		Cq when rd0 = "00000010" else
+		Dq;
+		
+q1 <= Aq when rd1 = "00000000" else
+		Bq when rd1 = "00000001" else
+		Cq when rd1 = "00000010" else
+		Dq;
+		
+Ald <= wr when wrA = "00000000" else '0';
+Bld <= wr when wrA = "00000001" else '0';
+Cld <= wr when wrA = "00000010" else '0';
+Dld <= wr when wrA = "00000011" else '0';
+
+end Banco;
