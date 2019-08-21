@@ -372,7 +372,6 @@ end case;
 
 	
 case wrA is
-	when "00000" => "00000000000000000000000000000000";
 	when "00001" => ldx1 <= wr;
 	when "00010" => ldx2 <= wr;
 	when "00011" => ldx3 <= wr;
