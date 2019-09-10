@@ -1,112 +1,247 @@
 library ieee ;
-use ieee . std_logic_1164 .all;
-entity bloco_mem is
-port (
-		wr, clk : in std_logic;
-		frmt: in std_logic_vector(2 downto 0);
-		ad, d: in std_logic_vector(63 downto 0);
-		q: out std_logic_vector(63 downto 0)
+use ieee.std_logic_1164.all;
+
+entity bloco_mem is port (
+	wr, clk 	: in std_logic;
+	frmt		: in std_logic_vector(2 downto 0);
+	addr		: in std_logic_vector(63 downto 0);
+	data		: in std_logic_vector(63 downto 0);
+	q			: out std_logic_vector(63 downto 0)
 );
-end bloco_mem ;
+end bloco_mem;
 
 architecture ckt of bloco_mem is
 
-component mem_p IS
-	PORT
+component mem_p is
+	port
 	(
-		address		: IN STD_LOGIC_VECTOR (15 DOWNTO 0);
-		clock		: IN STD_LOGIC  := '1';
-		data		: IN STD_LOGIC_VECTOR (7 DOWNTO 0);
-		wren		: IN STD_LOGIC ;
-		q		: OUT STD_LOGIC_VECTOR (7 DOWNTO 0)
+		address		: in std_logic_vector (15 downto 0);
+		clock		: in std_logic  := '1';
+		data		: in std_logic_vector (7 downto 0);
+		wren		: in std_logic ;
+		q			: in std_logic_vector (7 downto 0)
 	);
-END component;
+end component;
 
-signal d0, d1, d2, d3, d4, d5, d6, d7 : std_logic_vector(7 downto 0);
-signal q0, q1, q2, q3, q4, q5, q6, q7 : std_logic_vector(7 downto 0);
-signal wraux : std_logic_vector(7 downto 0) := (others => '0');
-signal wrin : std_logic_vector(7 downto 0) := (others => '0');
+component Shift8L1 is port(
+	en:			in std_logic;
+	entrada:	in std_logic_vector(7 downto 0);
+	saida: 		out std_logic_vector(7 downto 0)
+);
+end component;
+
+component Shift8L2 is port(
+	en:			in std_logic;
+	entrada:	in std_logic_vector(7 downto 0);
+	saida: 		out std_logic_vector(7 downto 0)
+);
+end component;
+
+component Shift8L4 is port(
+	en:			in std_logic;
+	entrada:	in std_logic_vector(7 downto 0);
+	saida: 		out std_logic_vector(7 downto 0)
+);
+end component;
+
+component Shift64L8 is port(
+	en:			in std_logic;
+	entrada:	in std_logic_vector(63 downto 0);
+	saida: 		out std_logic_vector(63 downto 0)
+);
+end component;
+
+component Shift64L16 is port(
+	en:			in std_logic;
+	entrada:	in std_logic_vector(63 downto 0);
+	saida: 		out std_logic_vector(63 downto 0)
+);
+end component;
+
+component Shift64L32 is port(
+	en:			in std_logic;
+	entrada:	in std_logic_vector(63 downto 0);
+	saida: 		out std_logic_vector(63 downto 0)
+);
+end component;
+
+component Shift64R8 is port(
+	en:			in std_logic;
+	entrada:	in std_logic_vector(63 downto 0);
+	saida: 		out std_logic_vector(63 downto 0)
+);
+end component;
+
+component Shift64R16 is port(
+	en:			in std_logic;
+	entrada:	in std_logic_vector(63 downto 0);
+	saida: 		out std_logic_vector(63 downto 0)
+);
+end component;
+
+component Shift64R32 is port(
+	en:			in std_logic;
+	entrada:	in std_logic_vector(63 downto 0);
+	saida: 		out std_logic_vector(63 downto 0)
+);
+end component;
+
+-- Sinal auxiliar para habilitar a escrita de cada um dos 8 blocos
+signal wren_aux 		: std_logic_vector(7 downto 0);
+-- Sinal auxiliar para os dados que serão escritos na memória
+signal data_aux 		: std_logic_vector(63 downto 0) := (others => '0');
+-- Sinais auxiliar para os dados lidos da memória
+signal q_aux_0, q_aux_1 : std_logic_vector(63 downto 0) := (others => '0');
+-- Sinal auxiliar para montar adequadamente os enable
+signal aux				: std_logic_vector(7 downto 0); 
+
+-- Sinais dos blocos de deslocamento de bits
+signal s8l1_out, s8l2_out : std_logic_vector(7 downto 0); 
+signal s64l8_out, s64l16_out : std_logic_vector(63 downto 0);
+signal s64r8_out, s64r16_out : std_logic_vector(63 downto 0);
 
 begin
 
-mem0 : mem_p
-	port map(
-	address => ad(18 downto 3),
-	clock => clk,
-	data => d0,
-	wren => wr0,
-	q => q0
-	);
+-- Palavra de enable a ser deslocada
+aux <= 	"00000001" when (frmt(1 downto 0) = "00") else 
+		"00000011" when (frmt(1 downto 0) = "01") else
+		"00001111" when (frmt(1 downto 0) = "10") else
+		"11111111";
+
+s8l1 : Shift8L1 port map(
+	en		=> addr(0),
+	entrada => aux,
+	saida 	=> s8l1_out
+);
+
+s8l2 : Shift8L1 port map(
+	en		=> addr(1),
+	entrada => s8l1_out,
+	saida 	=> s8l2_out
+);
+
+s8l4 : Shift8L1 port map(
+	en		=> addr(2),
+	entrada => s8l2_out,
+	saida 	=> wren_aux
+);
+
+s64l8 : Shift64L8 port map(
+	en		=> addr(0),
+	entrada => data,
+	saida 	=> s64l8_out
+);
+
+s64l16 : Shift64L16 port map(
+	en		=> addr(1),
+	entrada => s64l8_out,
+	saida 	=> s64l16_out
+);
+
+s64l32 : Shift64L32 port map(
+	en		=> addr(2),
+	entrada => s64l16_out,
+	saida 	=> data_aux
+);
+
+s64r8 : Shift64R8 port map(
+	en		=> addr(0),
+	entrada => q_aux_0,
+	saida 	=> s64r8_out
+);
+
+s64r16 : Shift64R16 port map(
+	en		=> addr(1),
+	entrada => s64r8_out,
+	saida 	=> s64r16_out
+);
+
+s64r32 : Shift64R32 port map(
+	en		=> addr(2),
+	entrada => s64r16_out,
+	saida 	=> q_aux_1
+);
+
+b0 : mem_p port map(
+	address => addr(18 downto 3),
+	clock 	=> clk,
+	data 	=> data_aux(7 downto 0),
+	wren 	=> wren_aux(0),
+	q 		=> q_aux_0(7 downto 0)
+);
 	
-mem1 : mem_p
-	port map(
-	address => ad(18 downto 3),
-	clock => clk,
-	data => d1,
-	wren => wr1,
-	q => q1
-	);
+b1 : mem_p port map(
+	address => addr(18 downto 3),
+	clock 	=> clk,
+	data 	=> data_aux(15 downto 8),
+	wren 	=> wren_aux(1),
+	q 		=> q_aux_0(15 downto 8)
+);
 	
-mem2 : mem_p
-	port map(
-	address => ad(18 downto 3),
-	clock => clk,
-	data => d2,
-	wren => wr2,
-	q => q2
-	);
+b2 : mem_p port map(
+	address => addr(18 downto 3),
+	clock 	=> clk,
+	data 	=> data_aux(23 downto 16),
+	wren 	=> wren_aux(2),
+	q 		=> q_aux_0(23 downto 16)
+);
 	
-mem3 : mem_p
-	port map(
-	address => ad(18 downto 3),
-	clock => clk,
-	data => d3,
-	wren => wr3,
-	q => q3
-	);
-	
-mem4 : mem_p
-	port map(
-	address => ad(18 downto 3),
-	clock => clk,
-	data => d4,
-	wren => wr4,
-	q => q4
-	);
-	
-mem5 : mem_p
-	port map(
-	address => ad(18 downto 3),
-	clock => clk,
-	data => d5,
-	wren => wr5,
-	q => q5
-	);
-	
-mem6 : mem_p
-	port map(
-	address => ad(18 downto 3),
-	clock => clk,
-	data => d6,
-	wren => wr6,
-	q => q6
-	);
-	
-mem7 : mem_p
-	port map(
-	address => ad(18 downto 3),
-	clock => clk,
-	data => d7,
-	wren => wr7,
-	q => q7
-	);
-	
-process (clk, wr , ad, d, frmt)
-begin
-	case frmt is
-      when "000" => wraux <= "00000001";
-      when '1' => s <= e1;
-    end case;
-end process;
+b3 : mem_p port map(
+	address => addr(18 downto 3),
+	clock 	=> clk,
+	data 	=> data_aux(31 downto 24),
+	wren 	=> wren_aux(1),
+	q 		=> q_aux_0(31 downto 24)
+);
+
+b4 : mem_p port map(
+	address => addr(18 downto 3),
+	clock 	=> clk,
+	data 	=> data_aux(39 downto 32),
+	wren 	=> wren_aux(4),
+	q 		=> q_aux_0(39 downto 32)
+);
+
+b5 : mem_p port map(
+	address => addr(18 downto 3),
+	clock 	=> clk,
+	data 	=> data_aux(47 downto 40),
+	wren 	=> wren_aux(5),
+	q 		=> q_aux_0(47 downto 40)
+);
+
+b6 : mem_p port map(
+	address => addr(18 downto 3),
+	clock 	=> clk,
+	data 	=> data_aux(55 downto 48),
+	wren 	=> wren_aux(6),
+	q 		=> q_aux_0(55 downto 48)
+);
+
+b7 : mem_p port map(
+	address => addr(18 downto 3),
+	clock 	=> clk,
+	data 	=> data_aux(63 downto 56),
+	wren 	=> wren_aux(7),
+	q 		=> q_aux_0(63 downto 56)
+);
+
+-- Lidando corretamente com a extensão de sinal
+q(7 downto 0) <= q_aux_1(7 downto 0);
+q(15 downto 8) <= (15 downto 8 => '0') 			when (frmt = "000") else
+				 (15 downto 8 => q_aux_1(7)) 	when (frmt = "100") else
+				 q_aux_1(15 downto 8);
+q(31 downto 16) <= (31 downto 16 => '0') 		when (frmt = "000" or 
+													  frmt = "001") else
+				  (31 downto 16 => q_aux_1(7)) 	when (frmt = "100") else
+				  (31 downto 16 => q_aux_1(15)) when (frmt = "101") else
+				  q_aux_1(31 downto 16);
+q(63 downto 32) <= (63 downto 32 => '0') 		when (frmt = "000" or 
+													  frmt = "001" or 
+													  frmt = "010") else
+				  (63 downto 32 => q_aux_1(7)) 	when (frmt = "100") else
+				  (63 downto 32 => q_aux_1(15)) when (frmt = "101") else
+				  (63 downto 32 => q_aux_1(31)) when (frmt = "110") else
+				  q_aux_1(63 downto 32);
 
 end ckt ;
