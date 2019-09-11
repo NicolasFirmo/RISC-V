@@ -18,18 +18,18 @@ architecture Behavior OF MemoryTB IS
         q			: out std_logic_vector(63 downto 0));
     end component;
 
-   --Inputs
-   signal address   : std_logic_vector(63 downto 0) := (others => '0');
-   signal data      : std_logic_vector(63 downto 0) := (others => '0');
-   signal wren      : std_logic := '0';
-   signal clock     : std_logic := '0';
-   signal frmt      : std_logic_vector(2 downto 0) := (others => '0');
+    --Inputs
+    signal address   : std_logic_vector(63 downto 0) := (others => '0');
+    signal data      : std_logic_vector(63 downto 0) := (others => '0');
+    signal wren      : std_logic := '0';
+    signal clock     : std_logic := '0';
+    signal frmt      : std_logic_vector(2 downto 0) := (others => '0');
 
-  --Outputs
-   signal q : std_logic_vector(63 downto 0);
+    --Outputs
+    signal q : std_logic_vector(63 downto 0);
 
-   -- Clock period definitions
-   constant CLOCK_PERIOD : time := 10 ns;
+    -- Clock period definitions
+    constant CLOCK_PERIOD : time := 10 ns;
  
 begin
     -- Instantiate the single-port RAM in VHDL
@@ -52,33 +52,34 @@ begin
     end process;
 
     stim_proc: process
-    begin  
+    begin
+        frmt <= "010";
         wren <= '0'; 
-        address <= (others => '1');
+        address <= (others => '0');
         data <= x"FFFFFFFFFFFFFFFF";
         
         wait for 100 ns; 
         
         -- start reading data from RAM 
-        for i in 0 to 5 loop
+        for i in 0 to 7 loop
             address <= address + x"0000000000000001";
             wait for CLOCK_PERIOD * 5;
         end loop;
 
-        address <= (others => '1');
+        address <= (others => '0');
         wren <= '1';
         
-        wait for 100 ns; 
+        --for j in 0 to 7 loop
+            wait for CLOCK_PERIOD; 
+            -- start writing to RAM
+            for i in 0 to 7 loop
+                address <= address + x"0000000000000001";
+                data <= data - x"0000000000000001";
+                wait for CLOCK_PERIOD;
+            end loop;
 
-        -- start writing to RAM
-        for i in 0 to 5 loop
-            address <= address + x"0000000000000001";
-            data <= data - x"0000000000000001";
-            wait for CLOCK_PERIOD * 5;
-        end loop;  
-        
-        wren <= '0';
-        wait;
+        --     frmt <= frmt + "001";
+        -- end loop;
     end process;
 
 end architecture Behavior;

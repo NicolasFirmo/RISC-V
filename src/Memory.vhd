@@ -19,7 +19,7 @@ component MemoryBlock is
 		clock		: in std_logic := '1';
 		data		: in std_logic_vector (7 downto 0);
 		wren		: in std_logic;
-		q			: in std_logic_vector (7 downto 0)
+		q			: out std_logic_vector (7 downto 0)
 	);
 end component;
 
@@ -108,64 +108,64 @@ aux <= 	"00000001" when (frmt(1 downto 0) = "00") else
 		"00001111" when (frmt(1 downto 0) = "10") else
 		"11111111";
 
-wren_aux <= wren_aux_0 and (others => wren);
+wren_aux <= wren_aux_0 and (7 downto 0 => wren);
 
 s8l1 : Shift8L1 port map(
-	en		=> addr(0),
+	en		=> address(0),
 	entrada => aux,
 	saida 	=> s8l1_out
 );
 
-s8l2 : Shift8L1 port map(
-	en		=> addr(1),
+s8l2 : Shift8L2 port map(
+	en		=> address(1),
 	entrada => s8l1_out,
 	saida 	=> s8l2_out
 );
 
-s8l4 : Shift8L1 port map(
-	en		=> addr(2),
+s8l4 : Shift8L4 port map(
+	en		=> address(2),
 	entrada => s8l2_out,
 	saida 	=> wren_aux_0
 );
 
 s64l8 : Shift64L8 port map(
-	en		=> addr(0),
+	en		=> address(0),
 	entrada => data,
 	saida 	=> s64l8_out
 );
 
 s64l16 : Shift64L16 port map(
-	en		=> addr(1),
+	en		=> address(1),
 	entrada => s64l8_out,
 	saida 	=> s64l16_out
 );
 
 s64l32 : Shift64L32 port map(
-	en		=> addr(2),
+	en		=> address(2),
 	entrada => s64l16_out,
 	saida 	=> data_aux
 );
 
 s64r8 : Shift64R8 port map(
-	en		=> addr(0),
+	en		=> address(0),
 	entrada => q_aux_0,
 	saida 	=> s64r8_out
 );
 
 s64r16 : Shift64R16 port map(
-	en		=> addr(1),
+	en		=> address(1),
 	entrada => s64r8_out,
 	saida 	=> s64r16_out
 );
 
 s64r32 : Shift64R32 port map(
-	en		=> addr(2),
+	en		=> address(2),
 	entrada => s64r16_out,
 	saida 	=> q_aux_1
 );
 
-b0 : mem_p port map(
-	address => addr(18 downto 3),
+b0 : MemoryBlock port map(
+	address => address(18 downto 3),
 	clock 	=> clk,
 	data 	=> data_aux(7 downto 0),
 	wren 	=> wren_aux(0),
@@ -173,7 +173,7 @@ b0 : mem_p port map(
 );
 	
 b1 : MemoryBlock port map(
-	address => addr(18 downto 3),
+	address => address(18 downto 3),
 	clock 	=> clk,
 	data 	=> data_aux(15 downto 8),
 	wren 	=> wren_aux(1),
@@ -181,7 +181,7 @@ b1 : MemoryBlock port map(
 );
 	
 b2 : MemoryBlock port map(
-	address => addr(18 downto 3),
+	address => address(18 downto 3),
 	clock 	=> clk,
 	data 	=> data_aux(23 downto 16),
 	wren 	=> wren_aux(2),
@@ -189,15 +189,15 @@ b2 : MemoryBlock port map(
 );
 	
 b3 : MemoryBlock port map(
-	address => addr(18 downto 3),
+	address => address(18 downto 3),
 	clock 	=> clk,
 	data 	=> data_aux(31 downto 24),
-	wren 	=> wren_aux(1),
+	wren 	=> wren_aux(3),
 	q 		=> q_aux_0(31 downto 24)
 );
 
 b4 : MemoryBlock port map(
-	address => addr(18 downto 3),
+	address => address(18 downto 3),
 	clock 	=> clk,
 	data 	=> data_aux(39 downto 32),
 	wren 	=> wren_aux(4),
@@ -205,7 +205,7 @@ b4 : MemoryBlock port map(
 );
 
 b5 : MemoryBlock port map(
-	address => addr(18 downto 3),
+	address => address(18 downto 3),
 	clock 	=> clk,
 	data 	=> data_aux(47 downto 40),
 	wren 	=> wren_aux(5),
@@ -213,7 +213,7 @@ b5 : MemoryBlock port map(
 );
 
 b6 : MemoryBlock port map(
-	address => addr(18 downto 3),
+	address => address(18 downto 3),
 	clock 	=> clk,
 	data 	=> data_aux(55 downto 48),
 	wren 	=> wren_aux(6),
@@ -221,7 +221,7 @@ b6 : MemoryBlock port map(
 );
 
 b7 : MemoryBlock port map(
-	address => addr(18 downto 3),
+	address => address(18 downto 3),
 	clock 	=> clk,
 	data 	=> data_aux(63 downto 56),
 	wren 	=> wren_aux(7),

@@ -13,7 +13,7 @@ STOP_TIME = 2000ns
 
 # Simulation break condition
 GHDL_SIM_OPT = --stop-time=$(STOP_TIME)
-GHDL_FLAGS  = --std=93 --ieee=synopsys --warn-no-vital-generic
+GHDL_FLAGS  = --std=08 --ieee=synopsys --warn-no-vital-generic
 
 WAVEFORM_VIEWER = gtkwave
 # WAVEFILE = $(SIM_DIR)/$(TESTBENCH).ghw
