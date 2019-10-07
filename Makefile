@@ -13,19 +13,14 @@ STOP_TIME = 2000ns
 
 # Simulation break condition
 GHDL_SIM_OPT = --stop-time=$(STOP_TIME)
-GHDL_FLAGS  = --std=08 --ieee=synopsys --warn-no-vital-generic
+GHDL_FLAGS  = --ieee=synopsys --warn-no-vital-generic
 
 WAVEFORM_VIEWER = gtkwave
-# WAVEFILE = $(SIM_DIR)/$(TESTBENCH).ghw
-# SAVEFILE = simulation/$(TESTBENCH).gtkw
 
 .PHONY: clean all
 
-#view : $(WAVEFILE)
-#	$(WAVEFORM_VIEWER) $^ $(SAVEFILE)
-
 # Compilation of the TestBenches
-$(SIM_DIR)/%.bin: test/%.vhd $(FILES)
+$(SIM_DIR)/%.o: test/%.vhd $(FILES)
 	# Set the working directory
 	mkdir -p $(SIM_DIR)/
 	
@@ -37,17 +32,19 @@ $(SIM_DIR)/%.bin: test/%.vhd $(FILES)
 	$(GHDL_CMD) -m  $(GHDL_FLAGS)  --workdir=$(SIM_DIR)/ --work=lib_VHDL $*
 	
 	# Cleaning of the directory
-	# mv e~$(call lc, $*).o $(SIM_DIR)/
-	mv $(SIM_DIR)/$*.o $(SIM_DIR)/$*.bin
+	mv $* $(SIM_DIR)/$*
 
 # Running and generation of the wavefile
-$(WAVEFILE): $(SIM_DIR)/$(TESTBENCH).bin
+$(SIM_DIR)/%.ghw: $(SIM_DIR)/%.o
 	@echo "Run .."
-	@./$(SIM_DIR)/$(TESTBENCH).bin $(GHDL_SIM_OPT) --wave=$@
+	@./$(SIM_DIR)/$* $(GHDL_SIM_OPT) --wave=$@
 
 # Cleaning the working directory and the binary files
 clean:
-	@rm -rf $(SIM_DIR)
-	@rm -rf simulation/*
+	@rm -rf $(SIM_DIR)/*
 
-all:  $(SIM_DIR)/MemoryTB.bin
+all:  $(SIM_DIR)/MemoryTB.o
+
+demux: $(SIM_DIR)/demux32tb.o $(SIM_DIR)/demux32tb.ghw
+
+regfile: $(SIM_DIR)/regfile64tb.o $(SIM_DIR)/regfile64tb.ghw
