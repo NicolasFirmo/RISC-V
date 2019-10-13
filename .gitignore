@@ -33,3 +33,5 @@ Temporary Items
 !.vscode/extensions.json
 
 .idea/*
+
+simulation/*
