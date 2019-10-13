@@ -48,3 +48,9 @@ all:  $(SIM_DIR)/MemoryTB.o
 demux: $(SIM_DIR)/demux32tb.o $(SIM_DIR)/demux32tb.ghw
 
 regfile: $(SIM_DIR)/regfile64tb.o $(SIM_DIR)/regfile64tb.ghw
+
+mul: $(SIM_DIR)/multb.o $(SIM_DIR)/multb.ghw
+
+div: $(SIM_DIR)/divtb.o $(SIM_DIR)/divtb.ghw
+
+clz: $(SIM_DIR)/clztb.o $(SIM_DIR)/clztb.ghw
