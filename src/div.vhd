@@ -39,6 +39,7 @@ end Div;
 --* @brief Implements the modified Non-Restoring Division Algorithm
 architecture Behavioral of Div is
 
+    -- Constants definitions for reduced code complexity
     constant MINUS_ONE          : std_logic_vector := x"FFFFFFFFFFFFFFFF";
     constant SMALLEST_INTEGER   : std_logic_vector := x"8000000000000000";
     constant ZERO               : std_logic_vector := x"0000000000000000";

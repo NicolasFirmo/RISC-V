@@ -1,50 +1,71 @@
+--* @author Cefas Rodrigues Freire <cefas@ufrn.edu.br>
+--* @author José Arilton Pereira Filho <arilton@ufrn.edu.br>
+--* @date $Date$
+--* @id $Id$
+--* @version $Rev$
+--*
+--* This entity represents the multiplication of two 64 bits inputs.
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.riscv.all;
 
 entity Mul is port(
-    A, B		: in std_logic_vector(63 downto 0);
-	C, D        : out std_logic_vector(63 downto 0);
 
-    -- Se A e B são signed (1) ou unsigned(0)
-    sa, sb      : in std_logic := '1'
+    --* First operand
+    X           : in std_logic_vector(63 downto 0);
+
+    --* Second operand
+    Y           : in std_logic_vector(63 downto 0);
+
+    --* 64 lower bits of multiplication result
+	Z0          : out std_logic_vector(63 downto 0);
+
+    --* 64 upper bits of multiplication result
+    Z1          : out std_logic_vector(63 downto 0);
+
+    --* If the first input (X) is signed (1) or unsigned (0)
+    sX          : in std_logic := '1';
+
+    --* If the second input (Y) s signed (1) or unsigned (0)
+    sY          : in std_logic := '1'
 );
 end Mul;
 
 architecture Behavioral of Mul is
 
-    type mul_array is array (63 downto 0) of std_logic_vector(126 downto 0);
-    type sum_array is array (63 downto 0) of std_logic_vector(127 downto 0);
+    -- Definition of utility arrays
+    type ArrayOfMul is array (63 downto 0) of std_logic_vector(126 downto 0);
+    type ArrayOfSum is array (63 downto 0) of std_logic_vector(127 downto 0);
 
-    signal A_aux, 
-           s_aux_a, inv_aux_a, 
-           s_aux_b, inv_aux_b       : std_logic_vector(63 downto 0) := (others => '0');
-    signal mul_aux                  : mul_array := (others => (others => '0'));
-    signal summation                : sum_array := (others => (others => '0'));
+    signal X_abs, aux: std_logic_vector(63 downto 0) := (others => '0');
+    
+    -- Bitwise multiplication array (that stores the multiplication of A for B(i))
+    signal mul          : ArrayOfMul := (others => (others => '0'));
 
-begin
-    s_aux_a(0) <= sa and A(63);
-    s_aux_b(0) <= sb and B(63);
+    -- Summation array (that stores the summation of bitwise multiplication results 
+    -- throughout iteriation process)
+    signal summation    : ArrayOfSum := (others => (others => '0'));
 
-    inv_aux_a <= (63 downto 0 => (sa and A(63)));
-    inv_aux_b <= (63 downto 0 => (sb and B(63)));
+Begin
+    aux(0) <= sign(Y) and sY;
 
-    A_aux <= std_logic_vector(
-        unsigned(A xor inv_aux_a) + unsigned(s_aux_a)
-    );
+    X_abs <= absolute(X) when sX = '1' else X;
 
-    gen_mul: for i in 0 to 63 generate
-        mul_aux(i)((63 + i) downto i) <= A_aux and ((63 + i) downto i => B(i));
-    end generate gen_mul;
+    MulGenerator: for i in 0 to 63 generate
+        -- Perform bitwise multiplication and store result
+        mul(i)((63 + i) downto i) <= X_abs * Y(i);
+    end generate MulGenerator;
 
-    summation(0) <= '0' & mul_aux(0);
+    summation(0) <= '0' & mul(0);
 
-    gen_sum: for i in 1 to 63 generate
-        summation(i) <= std_logic_vector(unsigned('0' & mul_aux(i)) + unsigned(summation(i - 1)));
-    end generate gen_sum;
+    SumGenerator: for i in 1 to 63 generate
+        -- Perform summation of the mul array
+        summation(i) <= ('0' & mul(i)) + summation(i - 1);
+    end generate SumGenerator;
 
-    C <= std_logic_vector(
-        unsigned(summation(63)(63 downto 0) xor inv_aux_a) + unsigned(s_aux_a)
-    );
-    D <= summation(63)(127 downto 64) xor inv_aux_a xor inv_aux_b xor s_aux_b;
+    Z0 <= (summation(63)(63 downto 0) xor (63 downto 0 => (sign(X) and sX))) + (sign(X) and sX);
+
+    Z1 <= summation(63)(127 downto 64) xor (63 downto 0 => ((sign(X) and sX) xor (sign(Y) and sY))) xor aux;
 end Behavioral;
