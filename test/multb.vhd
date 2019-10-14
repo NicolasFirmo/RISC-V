@@ -11,8 +11,8 @@ architecture Behavior OF MulTB IS
     -- Component Declaration
  
     component Mul is port(
-        A, B		: in std_logic_vector(63 downto 0);
-        C, D        : out std_logic_vector(63 downto 0)
+        X, Y		: in std_logic_vector(63 downto 0);
+        Z0, Z1        : out std_logic_vector(63 downto 0)
     );
     end component;
 
@@ -32,7 +32,7 @@ begin
     stim_proc: process
     begin
         A <= x"FFFFFFFFFFFFFFFE";
-        B <= x"0000000000000002";
+        B <= x"FFFFFFFFFFFFFFFE";
 
         wait for CLOCK_PERIOD;
         
