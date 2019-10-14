@@ -11,8 +11,8 @@ architecture Behavior OF DivTB IS
     -- Component Declaration
  
     component Div is port(
-        A, B		: in std_logic_vector(63 downto 0);
-        C, D        : out std_logic_vector(63 downto 0)
+        X, Y		: in std_logic_vector(63 downto 0);
+        Q, R        : out std_logic_vector(63 downto 0)
     );
     end component;
 
@@ -42,7 +42,7 @@ begin
         wait for CLOCK_PERIOD;
 
         A <= x"FFFFFFFFFFFFEEBF";
-        B <= x"0000000000000021";
+        B <= x"FFFFFFFFFFFFFFFD";
 
         wait for CLOCK_PERIOD;
 
@@ -52,7 +52,7 @@ begin
         wait for CLOCK_PERIOD;
 
         A <= x"0003056300002141";
-        B <= x"00000F0D05601021";
+        B <= x"FFFFFFFFFFFFFFFF";
 
         wait for CLOCK_PERIOD;
     end process;
