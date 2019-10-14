@@ -65,9 +65,17 @@ package RISCV is
     --* @return Subtraction of X with Y
     function "-" (X, Y: std_logic_vector) return std_logic_vector;
 
+    function "*" (X: std_logic_vector; Y: std_logic) return std_logic_vector;
+
 end package RISCV;
 
 package body RISCV is
+
+    function "*" (X: std_logic_vector; Y: std_logic) return std_logic_vector is
+
+    begin
+        return X and (X'range => Y);
+    end "*";
 
     function "+" (X, Y: std_logic_vector) return std_logic_vector is
     
