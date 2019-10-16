@@ -9,7 +9,7 @@ end BTypeExt;
 
 architecture ckt of BTypeExt is
 begin
-    s(10) <= '0';
+    s(0) <= '0';
 	s(12 downto 1) <= e(11 downto 0);
     s(63 downto 13) <= (others => e(11));
 end ckt ;

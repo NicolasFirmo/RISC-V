@@ -2,11 +2,11 @@ library ieee ;
 use ieee.std_logic_1164.all;
 
 entity Memory is port (
-	wren, clk 	: in std_logic;
+	clk, wren 	: in std_logic;
 	frmt		: in std_logic_vector(2 downto 0);
 	address		: in std_logic_vector(63 downto 0);
 	data		: in std_logic_vector(63 downto 0);
-	q			: out std_logic_vector(63 downto 0)
+	q			: out std_logic_vector
 );
 end Memory;
 
@@ -99,6 +99,8 @@ signal aux				: std_logic_vector(7 downto 0);
 signal s8l1_out, s8l2_out : std_logic_vector(7 downto 0); 
 signal s64l8_out, s64l16_out : std_logic_vector(63 downto 0);
 signal s64r8_out, s64r16_out : std_logic_vector(63 downto 0);
+
+signal q_aux : std_logic_vector(63 downto 0);
 
 begin
 

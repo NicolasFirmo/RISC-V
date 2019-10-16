@@ -3,13 +3,13 @@ use ieee.std_logic_1164.all;
 
 entity RegFile64 is port (
 	-- Clock e sinal de load
-	clk, ld			: in std_logic;
+	clk, ld						: in std_logic;
 	-- Endereços dos registradores
-	addr0, addr1 	: in std_logic_vector(4 downto 0);
-	-- Dados de entrada do registro referenciado por addr0
-	d 				: in std_logic_vector(63 downto 0);
-	-- Saídas dos registradores referenciados por addr0 e addr1
-	q0, q1 			: out std_logic_vector(63 downto 0)
+	addr_rs1, addr_rs2, addr_rd	: in std_logic_vector(4 downto 0);
+	-- Dados de entrada do registro referenciado por addr_rs1
+	d 							: in std_logic_vector(63 downto 0);
+	-- Saídas dos registradores referenciados por addr_rs1 e addr_rs2
+	q0, q1 						: out std_logic_vector(63 downto 0)
 );
 end RegFile64;
 
@@ -51,7 +51,7 @@ architecture bhv of RegFile64 is
 begin
 
 	demux : Demux32 port map(
-		addr 	=> addr0,
+		addr 	=> addr_rd,
 		en		=> ld,
 		q		=> ldx
 	);
@@ -98,7 +98,7 @@ begin
 		qx(20), qx(21), qx(22), qx(23),
 		qx(24), qx(25), qx(26), qx(27),
 		qx(28), qx(29), qx(30), qx(31),
-		addr0, q0
+		addr_rs1, q0
 	);
 
 	mux1 : mux32x64 port map (
@@ -110,6 +110,6 @@ begin
 		qx(20), qx(21), qx(22), qx(23),
 		qx(24), qx(25), qx(26), qx(27),
 		qx(28), qx(29), qx(30), qx(31),
-		addr1, q1
+		addr_rs2, q1
 	);
 end bhv;

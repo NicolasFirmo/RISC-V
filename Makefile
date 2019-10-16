@@ -54,3 +54,5 @@ mul: $(SIM_DIR)/multb.o $(SIM_DIR)/multb.ghw
 div: $(SIM_DIR)/divtb.o $(SIM_DIR)/divtb.ghw
 
 clz: $(SIM_DIR)/clztb.o $(SIM_DIR)/clztb.ghw
+
+datapath: $(SIM_DIR)/datapathtb.o

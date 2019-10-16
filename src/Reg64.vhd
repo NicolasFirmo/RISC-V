@@ -16,7 +16,7 @@ begin
 	
 	process (clk, ld)
 	begin
-		if clk ='1' and clk'event and ld = '1' then
+		if clk ='0' and clk'event and ld = '1' then
 			qs <= d;
 		end if;
 	end process ;

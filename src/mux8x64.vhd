@@ -1,13 +1,13 @@
 library ieee;
 use ieee.std_logic_1164.all;
 
-entity mux4x64 is port (
+entity mux8x64 is port (
     e0, e1, e2, e3,
     e4, e5, e6, e7  : in std_logic_vector(63 downto 0);
     sw              : in std_logic_vector(2 downto 0);
     s               : out std_logic_vector(63 downto 0)
 );
-end mux4x64;
+end mux8x64;
 
 architecture ckt of mux8x64 is
 begin
