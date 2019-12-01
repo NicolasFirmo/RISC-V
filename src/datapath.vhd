@@ -55,6 +55,13 @@ architecture Behavioral of Datapath is
     );
     end component;
 
+    component MemoryDecoder is port (
+        inst		: in  std_logic_vector(31 downto 0);
+        frmt        : out std_logic_vector(2 downto 0);
+        wren        : out std_logic
+    );
+    end component;
+
     component RegFile64 is port (
         -- Clock e sinal de load
         clk, ld						: in std_logic;
@@ -126,6 +133,8 @@ architecture Behavioral of Datapath is
     alias rs1_addr : std_logic_vector(4 downto 0) is inst_reg_stage(19 downto 15);
     alias rs2_addr : std_logic_vector(4 downto 0) is inst_reg_stage(24 downto 20);
     alias rd_addr : std_logic_vector(4 downto 0) is inst_wb_stage(11 downto 7);
+    alias rd_addr_past_1 : std_logic_vector(4 downto 0) is inst_mem_stage(11 downto 7);
+    alias rd_addr_past_2 : std_logic_vector(4 downto 0) is inst_ex_stage(11 downto 7);
 
     signal branch_offset : std_logic_vector(63 downto 0) := (others => '0');
 
@@ -152,7 +161,7 @@ architecture Behavioral of Datapath is
     signal branch_type_sel : std_logic := '0';
 
     signal rs1_data, rs2_data, rs1_data_or_alu_out, 
-           rs2_data_or_alu_out, rd_data             : std_logic_vector(63 downto 0) := (others => '0');
+           rs2_data_or_alu_out, rd_data, rs1_data_ex, rs2_data_ex             : std_logic_vector(63 downto 0) := (others => '0');
 
     signal j_imm, u_imm : std_logic_vector(19 downto 0) := (others => '0');
 
@@ -161,6 +170,9 @@ architecture Behavioral of Datapath is
     signal b_imm_ext, j_imm_ext, u_imm_ext, s_imm_ext, i_imm_ext : std_logic_vector(63 downto 0) := (others => '0');
 
     signal alu_op1_sel, alu_op2_sel : std_logic_vector(1 downto 0) := (others => '0');
+
+    alias alu_out_past_1 : std_logic_vector(63 downto 0) is data_mem_addr;
+    signal alu_out_past_2 : std_logic_vector(63 downto 0) := (others => '0');
 Begin
     
     -- Instruction memory
@@ -181,15 +193,17 @@ Begin
 
     alu_decoder : AluDecoder port map(inst_ex_stage, alu_fun);
 
+    mem_decoder : MemoryDecoder port map(inst_mem_stage, data_frmt, w_data_mem);
+
     regfile     : RegFile64 port map(clk, ld_regfile, rs1_addr, rs2_addr, rd_addr, rd_data, rs1_data, rs2_data);
 
     alu_op1_mux : mux4x64 port map (u_imm_ext, rs1_data_or_alu_out, x"0000000000000000", x"0000000000000000", alu_op1_sel, alu_op1);
 
     alu_op2_mux : mux4x64 port map (pc_ex_stage, s_imm_ext, i_imm_ext, rs2_data_or_alu_out, alu_op2_sel, alu_op2);
 
-    rs1_alu_mux : Mux2x1 port map (rs1_data, alu_out, bypass_alu, rs1_data_or_alu_out);
+    rs1_alu_mux : Mux2x1 port map (rs1_data_ex, alu_out, bypass_alu, rs1_data_or_alu_out);
 
-    rs2_alu_mux : Mux2x1 port map(rs2_data, alu_out, bypass_alu, rs2_data_or_alu_out);
+    rs2_alu_mux : Mux2x1 port map(rs2_data_ex, alu_out, bypass_alu, rs2_data_or_alu_out);
 
     branch_type_mux : Mux2x1 port map(j_imm_ext, b_imm_ext, branch_type_sel, branch_offset);
 
@@ -202,26 +216,36 @@ Begin
     inst_mem_stage_reg  : Reg32 port map(clk, '1', inst_ex_stage, inst_mem_stage, flush_pipeline);
     inst_wb_stage_reg   : Reg32 port map(clk, '1', inst_mem_stage, inst_wb_stage, flush_pipeline);
 
-    rs2_mem_stage_reg       : Reg64 port map(clk, '1', rs2_data, data_mem_data_in);
+    rs1_ex_stage_reg        : Reg64 port map(clk, '1', rs1_data, rs1_data_ex);
+    rs2_ex_stage_reg        : Reg64 port map(clk, '1', rs2_data, rs2_data_ex);
+
+    rs2_mem_stage_reg       : Reg64 port map(clk, '1', rs2_data_ex, data_mem_data_in);
     alu_out_mem_stage_reg   : Reg64 port map(clk, '1', alu_out, data_mem_addr);
     pc_mem_stage_reg        : Reg64 port map(clk, '1', pc, pc_reg_stage);
     pc_ex_stage_reg         : Reg64 port map(clk, '1', pc_reg_stage, pc_ex_stage);
 
+    alu_out_past_2_reg      : Reg64 port map(clk, '1', alu_out_past_1, alu_out_past_2);
+
+    -- B immediate reordernation
     b_imm(11) <= inst_reg_stage(31);
     b_imm(10) <= inst_reg_stage(7);
     b_imm(9 downto 4) <= inst_reg_stage(30 downto 25);
     b_imm(3 downto 0) <= inst_reg_stage(11 downto 8);
 
+    -- J immediate reordenation
     j_imm(19) <= inst_reg_stage(31);
     j_imm(18 downto 11) <= inst_reg_stage(19 downto 12);
     j_imm(10) <= inst_reg_stage(20);
     j_imm(9 downto 0) <= inst_reg_stage(30 downto 21);
 
+    -- U immediate reordenation
     u_imm <= inst_reg_stage(31 downto 12);
 
+    -- S immediate reordenation
     s_imm(11 downto 5) <= inst_reg_stage(31 downto 25);
     s_imm(4 downto 0) <= inst_reg_stage(11 downto 7);
 
+    -- I immediate reordenation
     i_imm <= inst_reg_stage(31 downto 20);
 
     b_type_ext           : BTypeExt port map(b_imm, b_imm_ext);

@@ -4,6 +4,12 @@ use ieee.numeric_std.all;
 
 package RISCV is 
 
+    constant PROGRAM_MEMNORY_ADDR_SIZE : integer := 11;
+
+    -- Array type definitions
+    type ArrayOfAddress is array (7 downto 0) of std_logic_vector(PROGRAM_MEMNORY_ADDR_SIZE downto 0);
+    type ArrayOfData is array (7 downto 0) of std_logic_vector(7 downto 0);
+
     -- OP codes
     constant OP_IMM 	: std_logic_vector := "0010011";
     constant OP_IMM_32  : std_logic_vector := "0011011";
@@ -89,9 +95,25 @@ package RISCV is
 
     function "*" (X: std_logic_vector; Y: std_logic) return std_logic_vector;
 
+    function "rol" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector;
+
+    function "ror" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector;
+
 end package RISCV;
 
 package body RISCV is
+
+    function "rol" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector is 
+
+    begin
+        return X rol to_integer(Y);
+    end "rol";
+
+    function "ror" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector is 
+
+    begin
+        return X ror to_integer(Y);
+    end "ror";
 
     function "*" (X: std_logic_vector; Y: std_logic) return std_logic_vector is
 
