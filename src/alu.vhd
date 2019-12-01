@@ -12,20 +12,6 @@ end ALU;
 
 architecture ckt of ALU is 
 
-component Shift64L64 is port(
-	en: 			in  std_logic_vector(5 downto 0);
-	entrada:		in  std_logic_vector(63 downto 0);
-	saida: 		out std_logic_vector(63 downto 0)
-);
-end component;
-
-component Shift64R64 is port(
-	en: 			in  std_logic_vector(5 downto 0);
-	entrada:		in  std_logic_vector(63 downto 0);
-	saida: 		out std_logic_vector(63 downto 0)
-);
-end component;
-
 signal s_a, s_b, s_c: signed(63 downto 0);
 signal sll64_out, srl64_out: std_logic_vector(63 downto 0);
 signal sll32_out, srl32_out: std_logic_vector(63 downto 0);
@@ -36,13 +22,7 @@ begin
 	s_a <= signed(a);
 	s_b <= signed(b);
 	
-	sll64: Shift64L64 port map (b(5 downto 0), a, sll64_out);
-	srl64: Shift64R64 port map (b(5 downto 0), a, srl64_out);
-	
 	select_shift_32(4 downto 0) <= b(4 downto 0);
-	
-	sll32: Shift64L64 port map (select_shift_32, a, sll32_out);
-	srl32: Shift64R64 port map (select_shift_32, a, srl32_out);
 	
 	s_c <= s_a  + 	s_b 		 when alu_fun = ALU_ADD 	else 
 	       s_a  - 	s_b 		 when alu_fun = ALU_SUB 	else 

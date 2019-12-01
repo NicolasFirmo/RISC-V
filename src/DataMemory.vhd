@@ -2,21 +2,21 @@ library ieee ;
 use ieee.std_logic_1164.all;
 use work.riscv.all;
 
-entity ProgramMemory is port (
+entity DataMemory is port (
 	clk, wren 	: in std_logic;
 	frmt		: in std_logic_vector(2 downto 0);
 	address		: in std_logic_vector(63 downto 0);
 	data		: in std_logic_vector(63 downto 0);
 	q			: out std_logic_vector
 );
-end ProgramMemory;
+end DataMemory;
 
-architecture Behavioral of ProgramMemory is
+architecture Behavioral of DataMemory is
 
     component MemoryBlock is
         port
         (
-            address		: in std_logic_vector (PROGRAM_MEMORY_ADDR_SIZE downto 0);
+            address		: in std_logic_vector (PROGRAM_DATA_ADDR_SIZE downto 0);
             clock		: in std_logic := '1';
             data		: in std_logic_vector (7 downto 0);
             wren		: in std_logic;

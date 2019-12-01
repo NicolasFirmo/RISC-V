@@ -1,14 +1,20 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use std.textio.all;
 
 package RISCV is 
 
-    constant PROGRAM_MEMNORY_ADDR_SIZE : integer := 11;
+    constant PROGRAM_MEMORY_ADDR_SIZE : integer := 11;
+    constant PROGRAM_DATA_ADDR_SIZE   : integer := 11;
 
     -- Array type definitions
-    type ArrayOfAddress is array (7 downto 0) of std_logic_vector(PROGRAM_MEMNORY_ADDR_SIZE downto 0);
+    type ArrayOfAddress is array (7 downto 0) of std_logic_vector(PROGRAM_DATA_ADDR_SIZE downto 0);
+    type ArrayOfProgramMemoryAddress is array (7 downto 0) of std_logic_vector(PROGRAM_MEMORY_ADDR_SIZE downto 0);
+    type ArrayOfDataMemoryAddress is array (7 downto 0) of std_logic_vector(PROGRAM_DATA_ADDR_SIZE downto 0);
     type ArrayOfData is array (7 downto 0) of std_logic_vector(7 downto 0);
+
+    type StdArray is array (natural range <>) of std_logic_vector(7 downto 0);
 
     -- OP codes
     constant OP_IMM 	: std_logic_vector := "0010011";
@@ -99,21 +105,84 @@ package RISCV is
 
     function "ror" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector;
 
+    function "sll" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector;
+
+    function "srl" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector;
+
+    -- function "sla" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector;
+
+    -- function "sra" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector;
+
+    impure function get_file_length(constant filename : string) return positive;
+
+    impure function get_data(constant filename : string) return StdArray;
+
 end package RISCV;
 
 package body RISCV is
 
+    -- Reference: https://electronics.stackexchange.com/questions/180446/how-to-load-std-logic-vector-array-from-text-file-at-start-of-simulation
+    impure function get_file_length(constant filename : string) return positive is
+        type char_file_t is file of character;     
+        file infile : char_file_t;
+        variable c: character;
+        variable res : integer := 0;
+    begin        
+        file_open(infile, filename, read_mode);
+
+        while not endfile (infile) loop
+            read(infile, c);
+            res := res + 1;
+        end loop;
+        
+        file_close(infile);
+        
+        return res;
+    end function;
+
+    impure function get_data(constant filename : string) return StdArray is
+        type char_file_t is file of character;     
+        file infile : char_file_t;
+        variable c: character;
+        variable res : StdArray(0 to get_file_length(filename) - 1);  
+        variable x : integer := 0;
+    begin
+        file_open(infile, filename, read_mode);
+        
+        while not endfile (infile) loop
+            read(infile, c);
+            res(x) := std_logic_vector(to_unsigned(character'pos(c), res(x)'length));
+            x := x + 1;
+        end loop; 
+        
+        file_close(infile);
+        
+        return res;
+    end function;
+
     function "rol" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector is 
 
     begin
-        return X rol to_integer(Y);
+        return std_logic_vector(rotate_left(unsigned(X), to_integer(unsigned(Y))));
     end "rol";
 
     function "ror" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector is 
 
     begin
-        return X ror to_integer(Y);
+        return std_logic_vector(rotate_right(unsigned(X), to_integer(unsigned(Y))));
     end "ror";
+
+    function "sll" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector is 
+
+    begin
+        return std_logic_vector(shift_left(unsigned(X), to_integer(unsigned(Y))));
+    end "sll";
+
+    function "srl" (X: std_logic_vector; Y: std_logic_vector) return std_logic_vector is 
+
+    begin
+        return std_logic_vector(shift_right(unsigned(X), to_integer(unsigned(Y))));
+    end "srl";
 
     function "*" (X: std_logic_vector; Y: std_logic) return std_logic_vector is
 

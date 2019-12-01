@@ -11,12 +11,21 @@ end Datapath;
 
 architecture Behavioral of Datapath is
 
-    component Memory is port (
+    component ProgramMemory is port (
         clk, wren 	: in std_logic;
         frmt		: in std_logic_vector(2 downto 0);
         address		: in std_logic_vector(63 downto 0);
         data		: in std_logic_vector(63 downto 0);
-        q			: out std_logic_vector(63 downto 0)
+        q			: out std_logic_vector
+    );
+    end component;
+
+    component DataMemory is port (
+        clk, wren 	: in std_logic;
+        frmt		: in std_logic_vector(2 downto 0);
+        address		: in std_logic_vector(63 downto 0);
+        data		: in std_logic_vector(63 downto 0);
+        q			: out std_logic_vector
     );
     end component;
 
@@ -176,10 +185,10 @@ architecture Behavioral of Datapath is
 Begin
     
     -- Instruction memory
-    inst_mem    : Memory port map(clk, w_inst_mem, "010", inst_mem_addr, inst_mem_data, inst2);
+    inst_mem    : ProgramMemory port map(clk, w_inst_mem, "010", inst_mem_addr, inst_mem_data, inst2);
 
     -- Data memory
-    data_mem    : Memory port map(clk, w_data_mem, data_frmt, data_mem_addr, data_mem_data_in, data_mem_data_out);
+    data_mem    : DataMemory port map(clk, w_data_mem, data_frmt, data_mem_addr, data_mem_data_in, data_mem_data_out);
 
     -- Program Counter Regiter
     pc_reg      : Reg64 port map(clk, ld_pc, pc_next, pc);

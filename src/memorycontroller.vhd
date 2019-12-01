@@ -9,7 +9,8 @@ entity MemoryController is port (
 	data		: in std_logic_vector(63 downto 0);
 	block_addr  : out ArrayOfAddress;
     block_data  : in ArrayOfData;
-    block_wren  : out std_logic_vector(7 downto 0)
+    block_wren  : out std_logic_vector(7 downto 0);
+    q           : out std_logic_vector
 );
 end MemoryController;
 
@@ -42,7 +43,7 @@ begin
 
     AddressGenerator : for i in 0 to 7 generate
         block_addr(i) <= ("000" & address(block_addr(i)'length - 1 downto 3)) + addr_aux(i + 7);
-    end generate MulGenerator;
+    end generate AddressGenerator;
 
     MemoryDataGenerator : for i in 0 to 7 generate
         q_aux_0((8 * i + 7) downto (8 * i)) <= block_data(i);
